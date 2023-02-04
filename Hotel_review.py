@@ -42,7 +42,7 @@ def transform_text(text):
 tfidf = pickle.load(open('vectorizer.pkl','rb'))
 model = pickle.load(open('model.pkl','rb'))
 
-st.title("Hotel Reviews Prediction")
+st.title("Hotel Reviews Classifier")
 
 input_review = st.text_area("Please enter your review here")
 
