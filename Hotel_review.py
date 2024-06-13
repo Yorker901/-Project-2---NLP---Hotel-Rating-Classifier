@@ -16,12 +16,26 @@ import matplotlib.pyplot as plt
 import base64
 from PIL import Image
 from nltk.corpus import stopwords
-import nltk
-nltk.download('stopwords')
-nltk.download('punkt')
 from nltk.stem.porter import PorterStemmer
+import nltk
+import os
 
 ps = PorterStemmer()
+
+# Download NLTK data files if not already present
+nltk_data_dir = os.path.expanduser('~/nltk_data')
+if not os.path.exists(nltk_data_dir):
+    os.makedirs(nltk_data_dir)
+
+nltk.data.path.append(nltk_data_dir)
+try:
+    stopwords.words('english')
+except LookupError:
+    nltk.download('stopwords', download_dir=nltk_data_dir)
+try:
+    nltk.word_tokenize('test')
+except LookupError:
+    nltk.download('punkt', download_dir=nltk_data_dir)
 
 # Function to preprocess text
 def transform_text(text):
@@ -228,3 +242,11 @@ body {
     border-color: #45a049;
 }
 '''
+"""
+
+# Save the updated code to a file
+file_path = '/mnt/data/hotel_review_classifier.py'
+with open(file_path, 'w') as file:
+    file.write(streamlit_app_code)
+
+file_path
