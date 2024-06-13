@@ -24,18 +24,19 @@ ps = PorterStemmer()
 
 # Download NLTK data files if not already present
 nltk_data_dir = os.path.expanduser('~/nltk_data')
-if not os.path.exists(nltk_data_dir):
-    os.makedirs(nltk_data_dir)
-
 nltk.data.path.append(nltk_data_dir)
-try:
-    stopwords.words('english')
-except LookupError:
-    nltk.download('stopwords', download_dir=nltk_data_dir)
-try:
-    nltk.word_tokenize('test')
-except LookupError:
-    nltk.download('punkt', download_dir=nltk_data_dir)
+
+def ensure_nltk_data():
+    try:
+        stopwords.words('english')
+    except LookupError:
+        nltk.download('stopwords', download_dir=nltk_data_dir)
+    try:
+        nltk.word_tokenize('test')
+    except LookupError:
+        nltk.download('punkt', download_dir=nltk_data_dir)
+
+ensure_nltk_data()
 
 # Function to preprocess text
 def transform_text(text):
@@ -64,8 +65,8 @@ def transform_text(text):
 
 # Load the vectorizer and model
 try:
-    tfidf = pickle.load(open('vectorizer.pkl','rb'))
-    model = pickle.load(open('model.pkl','rb'))
+    tfidf = pickle.load(open('vectorizer.pkl', 'rb'))
+    model = pickle.load(open('model.pkl', 'rb'))
 except FileNotFoundError:
     st.error("Model files not found. Please ensure 'vectorizer.pkl' and 'model.pkl' are in the correct directory.")
     st.stop()
@@ -178,7 +179,7 @@ else:
                         title='Sentiment Score'
                     )
                     st.altair_chart(gauge_chart, use_container_width=True)
-        
+
         # Word Cloud Section
         st.markdown("### Word Cloud of Reviews")
         wordcloud_text = ' '.join([transform_text(review['review']) for review in st.session_state['recent_predictions']])
