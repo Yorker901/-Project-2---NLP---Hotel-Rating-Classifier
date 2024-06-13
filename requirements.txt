@@ -3,4 +3,5 @@ nltk
 pandas
 altair
 wordcloud
-
+scikit-learn
+sklearn
