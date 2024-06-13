@@ -5,3 +5,5 @@ altair
 wordcloud
 matplotlib
 Pillow
+sklearn
+scikit-learn
