@@ -1,4 +1,7 @@
 streamlit
 nltk
-scikit-learn
-WordCloud
+pandas
+altair
+wordcloud
+matplotlib
+Pillow
