@@ -242,11 +242,3 @@ body {
     border-color: #45a049;
 }
 '''
-"""
-
-# Save the updated code to a file
-file_path = '/mnt/data/hotel_review_classifier.py'
-with open(file_path, 'w') as file:
-    file.write(streamlit_app_code)
-
-file_path
