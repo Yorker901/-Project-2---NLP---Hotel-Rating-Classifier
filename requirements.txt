@@ -1,7 +1,6 @@
-streamlit
 nltk
 pandas
 altair
 wordcloud
 scikit-learn
-sklearn
+streamlit==1.35.0
