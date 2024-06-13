@@ -1,6 +1,3 @@
 nltk
 pandas
 altair
-wordcloud
-scikit-learn
-streamlit==1.35.0
