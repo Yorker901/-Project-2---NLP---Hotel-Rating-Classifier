@@ -225,7 +225,6 @@ import pickle
 import string
 import numpy as np
 import pandas as pd
-import altair as alt
 import base64
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
@@ -374,16 +373,22 @@ else:
                     else:
                         st.error(f"This looks like a Negative Review with {probability[0][0]*100:.2f}% confidence.")
                     
-                    # Sentiment gauge chart using Altair
+                    # Sentiment gauge chart using Matplotlib
                     sentiment_score = probability[0][1] * 100 if prediction[0] == 1 else probability[0][0] * 100
-                    gauge_chart = alt.Chart(pd.DataFrame({'Sentiment': ['Positive' if prediction[0] == 1 else 'Negative'], 'Score': [sentiment_score]})).mark_arc(innerRadius=50).encode(
-                        theta=alt.Theta(field="Score", type="quantitative"),
-                        color=alt.Color(field="Sentiment", type="nominal"),
-                        tooltip=['Sentiment', 'Score']
-                    ).properties(
-                        title='Sentiment Score'
-                    )
-                    st.altair_chart(gauge_chart, use_container_width=True)
+                    st.write(f"Sentiment Score: {sentiment_score:.2f}%")
+                    fig, ax = plt.subplots(figsize=(4, 4))
+                    ax.set_xlim(0, 100)
+                    ax.set_ylim(0, 100)
+                    ax.set_aspect('equal', adjustable='box')
+                    ax.axis('off')
+                    gauge = plt.Circle((50, 50), 30, color='lightgray', fill=True, linewidth=2)
+                    ax.add_artist(gauge)
+                    gauge = plt.Circle((50, 50), 30, color='white', fill=True, linewidth=2)
+                    ax.add_artist(gauge)
+                    gauge = plt.Circle((50, 50), 30, color='green' if prediction[0] == 1 else 'red', fill=False, linewidth=8, linestyle='--')
+                    ax.add_artist(gauge)
+                    ax.text(50, 80, 'Positive' if prediction[0] == 1 else 'Negative', horizontalalignment='center', verticalalignment='center', fontsize=12)
+                    st.pyplot(fig)
 
     elif menu == "Upload Reviews":
         st.title("Upload Hotel Reviews for Batch Processing")
@@ -412,4 +417,3 @@ else:
         st.title("About")
         st.markdown("This application uses a machine learning model to classify hotel reviews into positive or negative categories.")
         st.markdown("#### Model Information")
-
