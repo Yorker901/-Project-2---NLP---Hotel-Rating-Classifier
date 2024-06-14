@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Feb  4 01:10:14 2023
+
+@author: admin
+"""
+
 import streamlit as st
 import pickle
 import string
@@ -7,7 +14,6 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import nltk
 import os
-import base64
 
 # Download NLTK data files if not already present
 nltk_data_dir = os.path.expanduser('~/nltk_data')
@@ -52,39 +58,35 @@ def transform_text(text):
     return " ".join(y)
 
 # Load the vectorizer and model
-def load_model_and_vectorizer():
-    try:
-        tfidf = pickle.load(open('vectorizer.pkl', 'rb'))
-        model = pickle.load(open('model.pkl', 'rb'))
-        return tfidf, model
-    except FileNotFoundError:
-        st.error("Model files not found. Please ensure 'vectorizer.pkl' and 'model.pkl' are in the correct directory.")
-        st.stop()
+try:
+    tfidf = pickle.load(open('vectorizer.pkl', 'rb'))
+    model = pickle.load(open('model.pkl', 'rb'))
+except FileNotFoundError:
+    st.error("Model files not found. Please ensure 'vectorizer.pkl' and 'model.pkl' are in the correct directory.")
+    st.stop()
 
 # Initialize session state for recent predictions
-def init_session_state():
-    if 'recent_predictions' not in st.session_state:
-        st.session_state['recent_predictions'] = []
+if 'recent_predictions' not in st.session_state:
+    st.session_state['recent_predictions'] = []
 
 # Function to handle user authentication
 def authenticate_user():
-    if 'authenticated' not in st.session_state:
-        st.session_state['authenticated'] = False
+    login_form = st.sidebar.form(key='login_form')
+    username = login_form.text_input('Username')
+    password = login_form.text_input('Password', type='password')
+    submit_button = login_form.form_submit_button('Login')
+    
+    if submit_button:
+        if username == "admin" and password == "password":
+            st.session_state['authenticated'] = True
+        else:
+            st.sidebar.error("Invalid username or password")
 
-    if not st.session_state['authenticated']:
-        login_form = st.sidebar.form(key='login_form')
-        username = login_form.text_input('Username')
-        password = login_form.text_input('Password', type='password')
-        submit_button = login_form.form_submit_button('Login')
-        
-        if submit_button:
-            if username == "admin" and password == "password":
-                st.session_state['authenticated'] = True
-            else:
-                st.sidebar.error("Invalid username or password")
+if 'authenticated' not in st.session_state:
+    st.session_state['authenticated'] = False
 
-# Function to handle file upload and prediction
-def handle_file_upload(file, tfidf, model):
+# Function to handle file upload
+def handle_file_upload(file):
     if file is not None:
         df = pd.read_csv(file)
         df['transformed'] = df['review'].apply(transform_text)
@@ -107,17 +109,39 @@ def handle_file_upload(file, tfidf, model):
         href = f'<a href="data:file/csv;base64,{b64}" download="predictions.csv">Download predictions as CSV</a>'
         st.markdown(href, unsafe_allow_html=True)
 
-# Function to render the home section
-def render_home(tfidf, model):
+# Navigation
+def main():
+    st.sidebar.title("Navigation")
+    menu = st.sidebar.radio("Go to", ["Home", "Upload Reviews", "Recent Predictions", "Feedback", "About"])
+
+    # User authentication
+    if not st.session_state['authenticated']:
+        authenticate_user()
+    else:
+        if menu == "Home":
+            render_home()
+
+        elif menu == "Upload Reviews":
+            render_upload_reviews()
+
+        elif menu == "Recent Predictions":
+            render_recent_predictions()
+
+        elif menu == "Feedback":
+            render_feedback()
+
+        elif menu == "About":
+            render_about()
+
+def render_home():
     st.title("Hotel Reviews Classifier")
-
-    st.write("This app predicts whether a hotel review is positive or negative. Please enter your review in the text box below and click 'Predict'.")
-
-    # Example reviews
+    st.write("This app predicts whether a hotel review is positive or negative.")
     st.markdown("#### Example Reviews")
-    examples = ["The hotel was amazing with excellent service.", 
-                "Terrible experience. The room was dirty and the staff was rude.", 
-                "Average stay. The location was convenient but the food was just okay."]
+    examples = [
+        "The hotel was amazing with excellent service.",
+        "Terrible experience. The room was dirty and the staff was rude.",
+        "Average stay. The location was convenient but the food was just okay."
+    ]
     selected_example = st.selectbox("Select an Example Review", examples)
     if st.button('Use Selected Example'):
         input_review = selected_example
@@ -147,14 +171,12 @@ def render_home(tfidf, model):
                 else:
                     st.error(f"This looks like a Negative Review with {probability[0][0]*100:.2f}% confidence.")
 
-# Function to render the upload reviews section
-def render_upload_reviews(tfidf, model):
+def render_upload_reviews():
     st.title("Upload Hotel Reviews for Batch Processing")
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
     if st.button('Process File'):
-        handle_file_upload(uploaded_file, tfidf, model)
+        handle_file_upload(uploaded_file)
 
-# Function to render the recent predictions section
 def render_recent_predictions():
     st.title("Recent Predictions")
     if len(st.session_state['recent_predictions']) > 0:
@@ -163,7 +185,6 @@ def render_recent_predictions():
     else:
         st.write("No predictions made yet.")
 
-# Function to render the feedback section
 def render_feedback():
     st.title("Feedback")
     feedback = st.text_area("Please provide your feedback on the prediction accuracy or any suggestions you have.")
@@ -174,54 +195,10 @@ def render_feedback():
         else:
             st.warning("Please enter feedback before submitting.")
 
-# Function to render the about section
 def render_about():
     st.title("About")
     st.write("This application predicts whether a hotel review is positive or negative.")
     st.write("It uses a machine learning model trained on hotel review data.")
-
-# Main function to run the app
-def main():
-    st.set_page_config(page_title="Hotel Reviews Classifier", page_icon=":hotel:", layout="wide")
-    tfidf, model = load_model_and_vectorizer()
-    init_session_state()
-    authenticate_user()
-
-    st.sidebar.markdown("""
-    <style>
-    .sidebar-content {
-        background-color: #f0f0f5;
-        padding: 20px;
-        border-radius: 5px;
-    }
-    .sidebar-icon {
-        display: flex;
-        align-items: center;
-        padding: 5px;
-    }
-    .sidebar-icon img {
-        width: 24px;
-        margin-right: 10px;
-    }
-    .sidebar-icon span {
-        font-size: 18px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.sidebar.title("Navigation")
-    menu = st.sidebar.radio("", ["Home", "Upload Reviews", "Recent Predictions", "Feedback", "About"])
-
-    if menu == "Home":
-        render_home(tfidf, model)
-    elif menu == "Upload Reviews":
-        render_upload_reviews(tfidf, model)
-    elif menu == "Recent Predictions":
-        render_recent_predictions()
-    elif menu == "Feedback":
-        render_feedback()
-    elif menu == "About":
-        render_about()
 
 if __name__ == "__main__":
     main()
