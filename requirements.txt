@@ -2,3 +2,4 @@ nltk
 pandas
 altair
 scikit-learn
+stopwords
