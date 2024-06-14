@@ -52,35 +52,39 @@ def transform_text(text):
     return " ".join(y)
 
 # Load the vectorizer and model
-try:
-    tfidf = pickle.load(open('vectorizer.pkl', 'rb'))
-    model = pickle.load(open('model.pkl', 'rb'))
-except FileNotFoundError:
-    st.error("Model files not found. Please ensure 'vectorizer.pkl' and 'model.pkl' are in the correct directory.")
-    st.stop()
+def load_model_and_vectorizer():
+    try:
+        tfidf = pickle.load(open('vectorizer.pkl', 'rb'))
+        model = pickle.load(open('model.pkl', 'rb'))
+        return tfidf, model
+    except FileNotFoundError:
+        st.error("Model files not found. Please ensure 'vectorizer.pkl' and 'model.pkl' are in the correct directory.")
+        st.stop()
 
 # Initialize session state for recent predictions
-if 'recent_predictions' not in st.session_state:
-    st.session_state['recent_predictions'] = []
+def init_session_state():
+    if 'recent_predictions' not in st.session_state:
+        st.session_state['recent_predictions'] = []
 
 # Function to handle user authentication
 def authenticate_user():
-    login_form = st.sidebar.form(key='login_form')
-    username = login_form.text_input('Username')
-    password = login_form.text_input('Password', type='password')
-    submit_button = login_form.form_submit_button('Login')
-    
-    if submit_button:
-        if username == "admin" and password == "password":
-            st.session_state['authenticated'] = True
-        else:
-            st.sidebar.error("Invalid username or password")
+    if 'authenticated' not in st.session_state:
+        st.session_state['authenticated'] = False
 
-if 'authenticated' not in st.session_state:
-    st.session_state['authenticated'] = False
+    if not st.session_state['authenticated']:
+        login_form = st.sidebar.form(key='login_form')
+        username = login_form.text_input('Username')
+        password = login_form.text_input('Password', type='password')
+        submit_button = login_form.form_submit_button('Login')
+        
+        if submit_button:
+            if username == "admin" and password == "password":
+                st.session_state['authenticated'] = True
+            else:
+                st.sidebar.error("Invalid username or password")
 
-# Function to handle file upload
-def handle_file_upload(file):
+# Function to handle file upload and prediction
+def handle_file_upload(file, tfidf, model):
     if file is not None:
         df = pd.read_csv(file)
         df['transformed'] = df['review'].apply(transform_text)
@@ -104,7 +108,7 @@ def handle_file_upload(file):
         st.markdown(href, unsafe_allow_html=True)
 
 # Function to render the home section
-def render_home():
+def render_home(tfidf, model):
     st.title("Hotel Reviews Classifier")
 
     st.write("This app predicts whether a hotel review is positive or negative. Please enter your review in the text box below and click 'Predict'.")
@@ -144,11 +148,11 @@ def render_home():
                     st.error(f"This looks like a Negative Review with {probability[0][0]*100:.2f}% confidence.")
 
 # Function to render the upload reviews section
-def render_upload_reviews():
+def render_upload_reviews(tfidf, model):
     st.title("Upload Hotel Reviews for Batch Processing")
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
     if st.button('Process File'):
-        handle_file_upload(uploaded_file)
+        handle_file_upload(uploaded_file, tfidf, model)
 
 # Function to render the recent predictions section
 def render_recent_predictions():
@@ -179,6 +183,8 @@ def render_about():
 # Main function to run the app
 def main():
     st.set_page_config(page_title="Hotel Reviews Classifier", page_icon=":hotel:", layout="wide")
+    tfidf, model = load_model_and_vectorizer()
+    init_session_state()
     authenticate_user()
 
     st.sidebar.markdown("""
@@ -204,12 +210,12 @@ def main():
     """, unsafe_allow_html=True)
 
     st.sidebar.title("Navigation")
-    menu = st.sidebar.radio("", ["Home", "Upload Reviews", "Recent Predictions", "Feedback", "About"], index=0)
+    menu = st.sidebar.radio("", ["Home", "Upload Reviews", "Recent Predictions", "Feedback", "About"])
 
     if menu == "Home":
-        render_home()
+        render_home(tfidf, model)
     elif menu == "Upload Reviews":
-        render_upload_reviews()
+        render_upload_reviews(tfidf, model)
     elif menu == "Recent Predictions":
         render_recent_predictions()
     elif menu == "Feedback":
