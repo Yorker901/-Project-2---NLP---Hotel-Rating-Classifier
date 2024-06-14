@@ -1,3 +1,4 @@
 nltk
 pandas
 altair
+sklearn
