@@ -225,13 +225,10 @@ import pickle
 import string
 import numpy as np
 import pandas as pd
-import base64
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import nltk
 import os
-
-ps = PorterStemmer()
 
 # Download NLTK data files if not already present
 nltk_data_dir = os.path.expanduser('~/nltk_data')
@@ -251,6 +248,7 @@ ensure_nltk_data()
 
 # Function to preprocess text
 def transform_text(text):
+    ps = PorterStemmer()
     text = text.lower()
     text = nltk.word_tokenize(text)
 
@@ -282,7 +280,7 @@ except FileNotFoundError:
     st.error("Model files not found. Please ensure 'vectorizer.pkl' and 'model.pkl' are in the correct directory.")
     st.stop()
 
-# Initialize session state for recent predictions and example reviews
+# Initialize session state for recent predictions
 if 'recent_predictions' not in st.session_state:
     st.session_state['recent_predictions'] = []
 
@@ -326,7 +324,7 @@ def handle_file_upload(file):
         href = f'<a href="data:file/csv;base64,{b64}" download="predictions.csv">Download predictions as CSV</a>'
         st.markdown(href, unsafe_allow_html=True)
 
-# Navigation and main interface
+# Navigation
 st.sidebar.title("Navigation")
 menu = st.sidebar.radio("Go to", ["Home", "Upload Reviews", "Recent Predictions", "Feedback", "About"])
 
@@ -344,9 +342,9 @@ else:
         examples = ["The hotel was amazing with excellent service.", 
                     "Terrible experience. The room was dirty and the staff was rude.", 
                     "Average stay. The location was convenient but the food was just okay."]
-        for example in examples:
-            if st.button(f"Use Example: {example}"):
-                input_review = example
+        selected_example = st.selectbox("Select an Example Review", examples)
+        if st.button('Use Selected Example'):
+            input_review = selected_example
 
         input_review = st.text_area("Please enter your review here", height=200, max_chars=500)
 
@@ -372,28 +370,17 @@ else:
                         st.success(f"This looks like a Positive Review with {probability[0][1]*100:.2f}% confidence.")
                     else:
                         st.error(f"This looks like a Negative Review with {probability[0][0]*100:.2f}% confidence.")
-                    
-                    # Sentiment gauge chart using Matplotlib
-                    sentiment_score = probability[0][1] * 100 if prediction[0] == 1 else probability[0][0] * 100
-                    st.write(f"Sentiment Score: {sentiment_score:.2f}%")
-                    fig, ax = plt.subplots(figsize=(4, 4))
-                    ax.set_xlim(0, 100)
-                    ax.set_ylim(0, 100)
-                    ax.set_aspect('equal', adjustable='box')
-                    ax.axis('off')
-                    gauge = plt.Circle((50, 50), 30, color='lightgray', fill=True, linewidth=2)
-                    ax.add_artist(gauge)
-                    gauge = plt.Circle((50, 50), 30, color='white', fill=True, linewidth=2)
-                    ax.add_artist(gauge)
-                    gauge = plt.Circle((50, 50), 30, color='green' if prediction[0] == 1 else 'red', fill=False, linewidth=8, linestyle='--')
-                    ax.add_artist(gauge)
-                    ax.text(50, 80, 'Positive' if prediction[0] == 1 else 'Negative', horizontalalignment='center', verticalalignment='center', fontsize=12)
-                    st.pyplot(fig)
+
+        # About Section
+        st.markdown("### About")
+        st.write("This application predicts whether a hotel review is positive or negative.")
+        st.write("It uses a machine learning model trained on hotel review data.")
 
     elif menu == "Upload Reviews":
         st.title("Upload Hotel Reviews for Batch Processing")
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-        handle_file_upload(uploaded_file)
+        if st.button('Process File'):
+            handle_file_upload(uploaded_file)
 
     elif menu == "Recent Predictions":
         st.title("Recent Predictions")
@@ -409,11 +396,31 @@ else:
         if st.button('Submit Feedback'):
             if feedback.strip():
                 st.success("Thank you for your feedback!")
-                # Handle feedback storage or processing here (e.g., save to a database or send via email)
+                # Handle feedback storage or processing here (e.g., save to a database)
             else:
                 st.warning("Please enter feedback before submitting.")
 
-    elif menu == "About":
-        st.title("About")
-        st.markdown("This application uses a machine learning model to classify hotel reviews into positive or negative categories.")
-        st.markdown("#### Model Information")
+# Custom CSS styling (style.css)
+'''
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+}
+
+.stButton>button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.stButton>button:hover {
+    background-color: #45a049;
+}
+
+.stTextArea>textarea {
+    border: 2px solid #4CAF50;
+}
+
+.stTextArea>textarea:focus {
+    border-color: #45a049;
+}
+'''
