@@ -213,13 +213,6 @@
 
 
 
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Feb  4 01:10:14 2023
-
-@author: admin
-"""
-
 import streamlit as st
 import pickle
 import string
@@ -229,12 +222,11 @@ import altair as alt
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import base64
+from PIL import Image
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import nltk
 import os
-
-ps = PorterStemmer()
 
 # Download NLTK data files if not already present
 nltk_data_dir = os.path.expanduser('~/nltk_data')
@@ -251,6 +243,8 @@ def ensure_nltk_data():
         nltk.download('punkt', download_dir=nltk_data_dir)
 
 ensure_nltk_data()
+
+ps = PorterStemmer()
 
 # Function to preprocess text
 def transform_text(text):
@@ -291,11 +285,10 @@ if 'recent_predictions' not in st.session_state:
 
 # CSS for custom styling
 def local_css(file_name):
-    try:
-        with open(file_name) as f:
-            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-    except FileNotFoundError:
-        st.warning(f"File '{file_name}' not found.")
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+local_css("style.css")
 
 # Function to handle user authentication
 def authenticate_user():
@@ -337,7 +330,41 @@ def handle_file_upload(file):
         href = f'<a href="data:file/csv;base64,{b64}" download="predictions.csv">Download predictions as CSV</a>'
         st.markdown(href, unsafe_allow_html=True)
 
-# Navigation
+# Function to predict sentiment and display results
+def predict_sentiment(review_text):
+    transformed_review = transform_text(review_text)
+    vector_input = tfidf.transform([transformed_review])
+    prediction = model.predict(vector_input)
+    probability = model.predict_proba(vector_input)
+    
+    # Update recent predictions
+    st.session_state['recent_predictions'].append({
+        'review': review_text,
+        'sentiment': 'Positive' if prediction[0] == 1 else 'Negative',
+        'confidence': probability[0][prediction[0]] * 100
+    })
+    
+    return prediction[0], probability[0][prediction[0]]
+
+# Function to generate gauge chart using Altair
+def generate_gauge_chart(sentiment, score):
+    data = pd.DataFrame({
+        'Sentiment': [sentiment],
+        'Score': [score]
+    })
+    
+    gauge_chart = alt.Chart(data).mark_arc().encode(
+        x='Score:Q',
+        color='Sentiment:N'
+    ).properties(
+        width=400,
+        height=200,
+        title='Sentiment Score'
+    )
+    
+    return gauge_chart
+
+# Main application interface
 st.sidebar.title("Navigation")
 menu = st.sidebar.radio("Go to", ["Home", "Upload Reviews", "Recent Predictions", "Feedback", "About"])
 
@@ -366,44 +393,22 @@ else:
                 st.warning("Please enter a review before predicting.")
             else:
                 with st.spinner('Analyzing your review...'):
-                    transformed_review = transform_text(input_review)
-                    vector_input = tfidf.transform([transformed_review])
-                    prediction = model.predict(vector_input)
-                    probability = model.predict_proba(vector_input)
-                    
-                    # Update recent predictions
-                    st.session_state['recent_predictions'].append({
-                        'review': input_review,
-                        'sentiment': 'Positive' if prediction[0] == 1 else 'Negative',
-                        'confidence': probability[0][prediction[0]] * 100
-                    })
+                    prediction, confidence = predict_sentiment(input_review)
                     
                     # Display result
-                    if prediction[0] == 1:
-                        st.success(f"This looks like a Positive Review with {probability[0][1]*100:.2f}% confidence.")
+                    if prediction == 1:
+                        st.success(f"This looks like a Positive Review with {confidence:.2f}% confidence.")
                     else:
-                        st.error(f"This looks like a Negative Review with {probability[0][0]*100:.2f}% confidence.")
+                        st.error(f"This looks like a Negative Review with {100 - confidence:.2f}% confidence.")
                     
-                    # Sentiment gauge chart
-                    sentiment_score = probability[0][1] * 100 if prediction[0] == 1 else probability[0][0] * 100
-                    gauge_chart = alt.Chart(pd.DataFrame({'Sentiment': ['Positive' if prediction[0] == 1 else 'Negative'], 'Score': [sentiment_score]})).mark_arc(innerRadius=50).encode(
-                        theta=alt.Theta(field="Score", type="quantitative"),
-                        color=alt.Color(field="Sentiment", type="nominal"),
-                        tooltip=['Sentiment', 'Score']
-                    ).properties(
-                        title='Sentiment Score'
-                    )
+                    # Generate and display gauge chart
+                    gauge_chart = generate_gauge_chart('Positive' if prediction == 1 else 'Negative', confidence)
                     st.altair_chart(gauge_chart, use_container_width=True)
 
         # Word Cloud Section
         st.markdown("### Word Cloud of Reviews")
-
-        # Collect transformed reviews
-        transformed_reviews = [transform_text(review['review']) for review in st.session_state['recent_predictions'] if 'review' in review]
-
-        # Check if there are reviews to generate the word cloud
-        if transformed_reviews:
-            wordcloud_text = ' '.join(transformed_reviews)
+        wordcloud_text = ' '.join([transform_text(review['review']) for review in st.session_state['recent_predictions']])
+        if wordcloud_text.strip() != '':
             wordcloud = WordCloud(width=800, height=400, background_color='white').generate(wordcloud_text)
 
             plt.figure(figsize=(10, 5))
@@ -411,7 +416,7 @@ else:
             plt.axis('off')
             st.pyplot(plt)
         else:
-            st.write("No recent predictions to generate a Word Cloud.")
+            st.write("No reviews yet to generate a word cloud.")
 
     elif menu == "Upload Reviews":
         st.title("Upload Hotel Reviews for Batch Processing")
@@ -442,25 +447,6 @@ else:
         st.markdown("#### Model Information")
         st.markdown("The model was trained on a dataset of hotel reviews. It uses a TF-IDF vectorizer to transform text data into numerical form and a machine learning model to make predictions. The model has an accuracy of XX% on the test data.")
 
-# Custom CSS styling (style.css)
-'''
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-}
-
-.stButton>button {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.stButton>button:hover {
-    background-color: #45a049;
-}
-
-.stTextArea>textarea {
-    border: 2px solid #4CAF50;
-}
 
 .stTextArea>textarea:focus {
     border-color: #45a049;
