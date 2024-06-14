@@ -75,13 +75,6 @@ except FileNotFoundError:
 if 'recent_predictions' not in st.session_state:
     st.session_state['recent_predictions'] = []
 
-# CSS for custom styling
-def local_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-
-local_css("style.css")
-
 # Function to handle user authentication
 def authenticate_user():
     login_form = st.sidebar.form(key='login_form')
@@ -217,29 +210,3 @@ else:
         st.title("About")
         st.markdown("This application uses a machine learning model to classify hotel reviews into positive or negative categories.")
         st.markdown("#### Model Information")
-        st.markdown("The model was trained on a dataset of hotel reviews. It uses a TF-IDF vectorizer to transform text data into numerical form and a machine learning model to make predictions. The model has an accuracy of XX% on the test data.")
-
-# Custom CSS styling (style.css)
-'''
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-}
-
-.stButton>button {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.stButton>button:hover {
-    background-color: #45a049;
-}
-
-.stTextArea>textarea {
-    border: 2px solid #4CAF50;
-}
-
-.stTextArea>textarea:focus {
-    border-color: #45a049;
-}
-'''
