@@ -1,0 +1,23 @@
+/* style.css */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+}
+
+.stButton>button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.stButton>button:hover {
+    background-color: #45a049;
+}
+
+.stTextArea>textarea {
+    border: 2px solid #4CAF50;
+}
+
+.stTextArea>textarea:focus {
+    border-color: #45a049;
+}
