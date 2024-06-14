@@ -71,6 +71,7 @@ def authenticate_user():
     if 'authenticated' not in st.session_state:
         st.session_state['authenticated'] = False
 
+# Function to handle file upload and prediction
 def handle_file_upload(file, tfidf, model):
     if file is not None:
         df = pd.read_csv(file)
@@ -174,17 +175,17 @@ def main():
     authenticate_user()
 
     st.sidebar.title("Navigation")
-    menu = st.sidebar.radio("Go to", ["Home", "Upload Reviews", "Recent Predictions", "Feedback", "About"])
+    page = st.sidebar.radio("", ["Home", "Upload Reviews", "Recent Predictions", "Feedback", "About"], index=0)
 
-    if menu == "Home":
+    if page == "Home":
         render_home(tfidf, model)
-    elif menu == "Upload Reviews":
+    elif page == "Upload Reviews":
         render_upload_reviews(tfidf, model)
-    elif menu == "Recent Predictions":
+    elif page == "Recent Predictions":
         render_recent_predictions()
-    elif menu == "Feedback":
+    elif page == "Feedback":
         render_feedback()
-    elif menu == "About":
+    elif page == "About":
         render_about()
 
 if __name__ == "__main__":
