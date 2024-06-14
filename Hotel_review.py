@@ -193,6 +193,8 @@ def render_about():
     st.title("About")
     st.write("This application predicts whether a hotel review is positive or negative.")
     st.write("It uses a machine learning model trained on hotel review data.")
+    st.write("For more information, visit my LinkedIn profile:")
+    st.markdown("[LinkedIn Profile](https://www.linkedin.com/in/arizkhan)"
 
 if __name__ == "__main__":
     main()
