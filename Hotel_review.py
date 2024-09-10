@@ -512,7 +512,7 @@ def handle_file_upload(file):
 def render_home():
     authenticate_user()  # Ensure authentication before rendering
     if st.session_state['authenticated']:
-        st.title("Hotel Reviews Classifier")
+        st.title("GuestPulse")
         st.write("This app predicts whether a hotel review is positive or negative.")
         st.markdown("#### Example Reviews")
         examples = [
@@ -552,13 +552,13 @@ def render_home():
         st.warning("Please log in to access the application.")
 
 # Function to render upload reviews page
-def render_upload_reviews():
-    authenticate_user()  # Ensure authentication before rendering
-    if st.session_state['authenticated']:
-        st.title("Upload Hotel Reviews for Batch Processing")
-        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-        if st.button('Process File'):
-            handle_file_upload(uploaded_file)
+# def render_upload_reviews():
+#     authenticate_user()  # Ensure authentication before rendering
+#     if st.session_state['authenticated']:
+#         st.title("Upload Hotel Reviews for Batch Processing")
+#         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+#         if st.button('Process File'):
+#             handle_file_upload(uploaded_file)
 
 # Function to render recent predictions page
 def render_recent_predictions():
@@ -597,13 +597,10 @@ def render_about():
 # Main function to handle navigation and page rendering
 def main():
     st.sidebar.title("Navigation")
-    menu = st.sidebar.selectbox("Go to", ["Home", "Upload Reviews", "Recent Predictions", "Feedback", "About"])
+    menu = st.sidebar.selectbox("Go to", ["Home", "Recent Predictions", "Feedback", "About"])
 
     if menu == "Home":
         render_home()
-
-    elif menu == "Upload Reviews":
-        render_upload_reviews()
 
     elif menu == "Recent Predictions":
         render_recent_predictions()
