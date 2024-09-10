@@ -549,7 +549,7 @@ def render_home():
                     else:
                         st.error(f"This looks like a Negative Review with {probability[0][0]*100:.2f}% confidence.")
     else:
-        st.warning("Please log in to access the application.")
+        st.warning("Please log in to access the GuestPulse.")
 
 # Function to render upload reviews page
 # def render_upload_reviews():
