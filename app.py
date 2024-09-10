@@ -57,7 +57,7 @@ if 'recent_predictions' not in st.session_state:
     st.session_state['recent_predictions'] = []
 
 # Streamlit UI
-st.title("Hotel Reviews Classifier")
+st.title("GuestPulse")
 
 st.write("This app predicts whether a hotel review is positive or negative. Please enter your review in the text box below and click 'Predict'.")
 
